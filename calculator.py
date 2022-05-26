@@ -33,9 +33,19 @@ def read_div(line, index):
   token = {'type': 'DIVISION'}
   return token, index + 1
 
-def read_brackets(line, index):
-  token = {'type': 'BRACKETS'}
-  return token, index + 1
+def find_bracket(line, index):
+  count_inner = 0
+  count_outer = 0
+  while line[index] != ')':
+    if (line[index] == '('):
+      count_inner += 1
+    index += 1  
+  while index < len(line):
+    if (line[index] == ')'):
+      count_outer += 1
+    if count_inner == count_outer:
+      return index  
+    index += 1   
 
 def tokenize(line):
   tokens = []
@@ -51,14 +61,18 @@ def tokenize(line):
       (token, index) = read_mult(line, index)
     elif line[index] == '/':
       (token, index) = read_div(line, index)  
-    elif line[index] == '(' or line[index] == ')':
-      (token, index) = read_brackets(line, index)
+    elif line[index] == '(':
+      inner_bracket = index
+      index = find_bracket(line, inner_bracket) 
+      sub_token = tokenize(line[inner_bracket+1 : index])
+      sub_answer = evaluate(sub_token)
+      token = {'type': 'NUMBER', 'number': sub_answer}
+      index += 1
     else:
       print('Invalid character found: ' + line[index])
       exit(1)
-    tokens.append(token)
+    tokens.append(token) 
   return tokens
-
 
 def evaluate(tokens):
   answer = 0
@@ -90,11 +104,12 @@ def evaluate(tokens):
         print('Invalid syntax')
         exit(1)
     index += 1
-  return answer
+  return answer 
 
 
 def test(line):
   tokens = tokenize(line)
+  print(tokens)
   actual_answer = evaluate(tokens)
   expected_answer = eval(line)
   if abs(actual_answer - expected_answer) < 1e-8:
@@ -109,8 +124,11 @@ def run_test():
   test("1+2")
   test("1.0+2.1-3")
   test("3*1.1")
-  test("5/2")
+  test("53/2")
   test("4+2*9-3/5")
+  test("(1+2)")
+  test("5*(2+7-8)+1")
+  test("7-(5+3*4)*(4+(2*9.2)-7)")
   print("==== Test finished! ====\n")
 
 run_test()
