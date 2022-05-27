@@ -35,15 +35,14 @@ def read_div(line, index):
 
 def find_bracket(line, index):
   count_inner = 0
-  count_outer = 0
   while line[index] != ')':
     if (line[index] == '('):
       count_inner += 1
     index += 1  
   while index < len(line):
     if (line[index] == ')'):
-      count_outer += 1
-    if count_inner == count_outer:
+      count_inner -= 1
+    if count_inner == 0:
       return index  
     index += 1   
 
@@ -82,15 +81,17 @@ def evaluate(tokens):
     if tokens[index]['type'] == 'NUMBER':
       if tokens[index - 1]['type'] == 'MULT':
         tokens[index - 2]['number'] *= tokens[index]['number']
+        tokens = tokens[:index - 1] + tokens[index + 1:]
       elif tokens[index - 1]['type'] == 'DIVISION':
         tokens[index - 2]['number'] /= tokens[index]['number']
+        tokens = tokens[:index - 1] + tokens[index + 1:]
       elif tokens[index - 1]['type'] == 'PLUS' or tokens[index - 1]['type'] == 'MINUS':
         pass
       else:
         print('Invalid syntax')
-        exit(1)
+        exit(1)  
     index += 1
-
+    
   index = 1
   while index < len(tokens):
     if tokens[index]['type'] == 'NUMBER':
@@ -109,7 +110,6 @@ def evaluate(tokens):
 
 def test(line):
   tokens = tokenize(line)
-  print(tokens)
   actual_answer = evaluate(tokens)
   expected_answer = eval(line)
   if abs(actual_answer - expected_answer) < 1e-8:
@@ -125,6 +125,7 @@ def run_test():
   test("1.0+2.1-3")
   test("3*1.1")
   test("53/2")
+  test("2*3*4")
   test("4+2*9-3/5")
   test("(1+2)")
   test("5*(2+7-8)+1")
